@@ -11,7 +11,7 @@ const { FiPlus, FiMinus, FiX, FiDivide, FiSettings, FiPlay, FiPause, FiGrid, FiP
 const Practice = () => {
   const { user } = useUser();
   const { t } = useLanguage();
-
+  
   const [selectedOperation, setSelectedOperation] = useState('addition');
   const [difficulty, setDifficulty] = useState(user?.preferences?.difficulty || 'medium');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -61,20 +61,16 @@ const Practice = () => {
       symbol: '÷',
       color: 'orange',
       description: 'Divide numbers'
-    }
-  ];
-
-  // Add percentages if enabled
-  if (enablePercentages) {
-    operations.push({
+    },
+    {
       id: 'percentages',
       name: t('percentages'),
       icon: FiPercent,
       symbol: '%',
       color: 'pink',
       description: 'Calculate percentages'
-    });
-  }
+    }
+  ];
 
   // Filter operations based on age
   const availableOperations = operations.filter(op => {
@@ -100,21 +96,9 @@ const Practice = () => {
   ];
 
   const difficulties = [
-    {
-      id: 'easy',
-      name: t('easy'),
-      description: 'Small numbers, no time limit'
-    },
-    {
-      id: 'medium',
-      name: t('medium'),
-      description: 'Medium numbers, optional timer'
-    },
-    {
-      id: 'hard',
-      name: t('hard'),
-      description: 'Large numbers, timed challenges'
-    }
+    { id: 'easy', name: t('easy'), description: 'Small numbers, no time limit' },
+    { id: 'medium', name: t('medium'), description: 'Medium numbers, optional timer' },
+    { id: 'hard', name: t('hard'), description: 'Large numbers, timed challenges' }
   ];
 
   const handleOperationSelect = (operation) => {
@@ -169,8 +153,8 @@ const Practice = () => {
                 <motion.div
                   key={operation.id}
                   className={`bg-white rounded-2xl p-6 shadow-lg cursor-pointer transition-all ${
-                    selectedOperation === operation.id 
-                      ? `ring-4 ring-${operation.color}-300 shadow-xl` 
+                    selectedOperation === operation.id
+                      ? `ring-4 ring-${operation.color}-300 shadow-xl`
                       : 'hover:shadow-xl'
                   }`}
                   initial={{ opacity: 0, y: 20 }}
@@ -180,8 +164,13 @@ const Practice = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleOperationSelect(operation.id)}
                 >
-                  <div className={`w-16 h-16 rounded-2xl bg-${operation.color}-100 flex items-center justify-center mb-4 mx-auto`}>
-                    <SafeIcon icon={operation.icon} className={`w-8 h-8 text-${operation.color}-600`} />
+                  <div
+                    className={`w-16 h-16 rounded-2xl bg-${operation.color}-100 flex items-center justify-center mb-4 mx-auto`}
+                  >
+                    <SafeIcon
+                      icon={operation.icon}
+                      className={`w-8 h-8 text-${operation.color}-600`}
+                    />
                   </div>
                   <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">
                     {operation.name}
@@ -213,8 +202,8 @@ const Practice = () => {
                     key={table.number}
                     onClick={() => handleTableSelect(table.number)}
                     className={`p-4 rounded-xl font-bold transition-all ${
-                      selectedTable === table.number 
-                        ? 'ring-4 ring-blue-300 scale-105' 
+                      selectedTable === table.number
+                        ? 'ring-4 ring-blue-300 scale-105'
                         : 'hover:scale-105'
                     } ${table.color}`}
                     whileHover={{ scale: 1.1 }}
@@ -368,7 +357,10 @@ const Practice = () => {
               className="bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-xl px-12 py-6 rounded-2xl shadow-lg hover:shadow-xl transition-all"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              disabled={!selectedOperation || (selectedOperation === 'multiplicationTables' && !selectedTable)}
+              disabled={
+                !selectedOperation ||
+                (selectedOperation === 'multiplicationTables' && !selectedTable)
+              }
             >
               <div className="flex items-center space-x-3">
                 <SafeIcon icon={FiPlay} className="w-6 h-6" />

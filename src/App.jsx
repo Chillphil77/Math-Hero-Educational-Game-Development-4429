@@ -19,9 +19,13 @@ import SudokuGame from './pages/games/SudokuGame';
 import MathPuzzles from './pages/games/MathPuzzles';
 import PizzaFractions from './pages/games/PizzaFractions';
 import HangmanMath from './pages/games/HangmanMath';
+import MathRacer from './pages/games/MathRacer';
 import MathStories from './pages/MathStories';
 import PirateTreasure from './pages/stories/PirateTreasure';
 import DinoEggs from './pages/stories/DinoEggs';
+import MathDetective from './pages/stories/MathDetective';
+import SpaceMission from './pages/stories/SpaceMission';
+import BakeryFractions from './pages/stories/BakeryFractions';
 import Shop from './pages/Shop';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
@@ -40,30 +44,32 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/onboarding" element={<Onboarding />} />
-                  <Route path="/*" element={
-                    <Layout>
-                      <Routes>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/practice" element={<Practice />} />
-                        <Route path="/mini-games" element={<MiniGames />} />
-                        <Route path="/games/pacman" element={<PacManMath />} />
-                        <Route path="/games/slot-machine" element={<SlotMachine />} />
-                        <Route path="/games/memory" element={<MemoryGame />} />
-                        <Route path="/games/battleship" element={<BattleshipMath />} />
-                        <Route path="/games/sudoku" element={<SudokuGame />} />
-                        <Route path="/games/math-puzzles" element={<MathPuzzles />} />
-                        <Route path="/games/pizza-fractions" element={<PizzaFractions />} />
-                        <Route path="/games/hangman" element={<HangmanMath />} />
-                        <Route path="/stories" element={<MathStories />} />
-                        <Route path="/stories/pirate-treasure" element={<PirateTreasure />} />
-                        <Route path="/stories/dino-eggs" element={<DinoEggs />} />
-                        <Route path="/shop" element={<Shop />} />
-                        <Route path="/leaderboard" element={<Leaderboard />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/premium" element={<Premium />} />
-                      </Routes>
-                    </Layout>
-                  } />
+                  <Route path="/*" element={<Layout>
+                    <Routes>
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/practice" element={<Practice />} />
+                      <Route path="/mini-games" element={<MiniGames />} />
+                      <Route path="/games/pacman" element={<PacManMath />} />
+                      <Route path="/games/slot-machine" element={<SlotMachine />} />
+                      <Route path="/games/memory" element={<MemoryGame />} />
+                      <Route path="/games/battleship" element={<BattleshipMath />} />
+                      <Route path="/games/sudoku" element={<SudokuGame />} />
+                      <Route path="/games/math-puzzles" element={<MathPuzzles />} />
+                      <Route path="/games/pizza-fractions" element={<PizzaFractions />} />
+                      <Route path="/games/hangman" element={<HangmanMath />} />
+                      <Route path="/games/math-racer" element={<MathRacer />} />
+                      <Route path="/stories" element={<MathStories />} />
+                      <Route path="/stories/pirate-treasure" element={<PirateTreasure />} />
+                      <Route path="/stories/dino-eggs" element={<DinoEggs />} />
+                      <Route path="/stories/math-detective" element={<MathDetective />} />
+                      <Route path="/stories/space-mission" element={<SpaceMission />} />
+                      <Route path="/stories/bakery-fractions" element={<BakeryFractions />} />
+                      <Route path="/shop" element={<Shop />} />
+                      <Route path="/leaderboard" element={<Leaderboard />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/premium" element={<Premium />} />
+                    </Routes>
+                  </Layout>} />
                 </Routes>
               </div>
             </GameProvider>

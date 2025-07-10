@@ -8,7 +8,7 @@ import confetti from 'canvas-confetti';
 
 const PacManMath = () => {
   const { generateMathProblem, startGame, endGame } = useGame();
-  const { user, addCoins, addXP } = useUser();
+  const { user, addCoins, addXP, updateUser } = useUser();
   const { playSound } = useSound();
   const navigate = useNavigate();
 
@@ -29,21 +29,21 @@ const PacManMath = () => {
 
   // Simplified 15x15 maze (1=wall, 0=path, 2=dot, 3=answer)
   const baseMaze = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
-    [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
-    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,2,1,2,1,1,1,2,1,1,1,2,1,2,1],
-    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,1,1,2,1,2,2,2,2,2,1,2,1,1,1],
-    [0,0,0,2,1,2,1,0,1,2,1,2,0,0,0],
-    [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1],
-    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,2,1,2,1,1,1,2,1,1,1,2,1,2,1],
-    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-    [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
-    [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1],
+    [1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1, 2, 1],
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+    [1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1],
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+    [1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1],
+    [0, 0, 0, 2, 1, 2, 1, 0, 1, 2, 1, 2, 0, 0, 0],
+    [1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1],
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+    [1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1],
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+    [1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1, 2, 1],
+    [1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   ];
 
   // Initialize game
@@ -82,12 +82,13 @@ const PacManMath = () => {
 
     // Create maze with answers at RANDOM positions
     const newMaze = baseMaze.map(row => [...row]);
-    
+
     // Find all empty cells where we can place answers
     const emptyCells = [];
     for (let y = 0; y < newMaze.length; y++) {
       for (let x = 0; x < newMaze[y].length; x++) {
-        if (newMaze[y][x] === 2) { // dot positions
+        if (newMaze[y][x] === 2) {
+          // dot positions
           emptyCells.push({ x, y });
         }
       }
@@ -96,14 +97,11 @@ const PacManMath = () => {
     // Randomly select 4 positions for answers
     const selectedPositions = [];
     const allAnswers = [correctAnswer, ...wrongAnswers];
-    
     for (let i = 0; i < Math.min(4, allAnswers.length); i++) {
       if (emptyCells.length === 0) break;
-      
       const randomIndex = Math.floor(Math.random() * emptyCells.length);
       const position = emptyCells.splice(randomIndex, 1)[0];
       selectedPositions.push(position);
-      
       newMaze[position.y][position.x] = {
         type: 'answer',
         value: allAnswers[i],
@@ -159,7 +157,13 @@ const PacManMath = () => {
       }
 
       // Check boundaries and walls
-      if (newY < 0 || newY >= maze.length || newX < 0 || newX >= maze[0].length || maze[newY][newX] === 1) {
+      if (
+        newY < 0 ||
+        newY >= maze.length ||
+        newX < 0 ||
+        newX >= maze[0].length ||
+        maze[newY][newX] === 1
+      ) {
         return prev;
       }
 
@@ -200,14 +204,17 @@ const PacManMath = () => {
         origin: { y: 0.6 }
       });
 
-      setGameState(prev => ({
-        ...prev,
-        score: prev.score + 100,
-        level: prev.level + 1
-      }));
+      const newScore = gameState.score + 100;
+      const coinsEarned = 20;
 
-      addCoins(20);
+      setGameState(prev => ({ ...prev, score: newScore, level: prev.level + 1 }));
+
+      // Add coins to user account and update properly
+      addCoins(coinsEarned);
       addXP(30);
+
+      // Scroll to top to show the math problem window
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Generate next level after delay
       setTimeout(() => {
@@ -217,7 +224,6 @@ const PacManMath = () => {
     } else {
       playSound('incorrect');
       setGameState(prev => ({ ...prev, lives: prev.lives - 1 }));
-
       if (gameState.lives <= 1) {
         gameOver();
       }
@@ -226,10 +232,7 @@ const PacManMath = () => {
 
   const gameOver = () => {
     setGameState(prev => ({ ...prev, gameStatus: 'gameOver' }));
-    endGame(gameState.score, {
-      level: gameState.level,
-      dotsEaten: gameState.dotsEaten
-    });
+    endGame(gameState.score, { level: gameState.level, dotsEaten: gameState.dotsEaten });
   };
 
   // Keyboard controls
@@ -294,14 +297,17 @@ const PacManMath = () => {
     if (pacman.x === x && pacman.y === y) {
       return (
         <motion.div
-          className="w-full h-full bg-yellow-400 rounded-full flex items-center justify-center text-lg"
+          className="w-full h-full bg-yellow-400 rounded-full flex items-center justify-center"
           animate={{ rotate: [0, 360] }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
-          {pacman.direction === 'right' && '▶️'}
-          {pacman.direction === 'left' && '◀️'}
-          {pacman.direction === 'up' && '🔼'}
-          {pacman.direction === 'down' && '🔽'}
+          {/* Use a real Pac-Man icon instead of arrows */}
+          <span className="text-lg">
+            {pacman.direction === 'right' && '😮'}
+            {pacman.direction === 'left' && '😮'}
+            {pacman.direction === 'up' && '😮'}
+            {pacman.direction === 'down' && '😮'}
+          </span>
         </motion.div>
       );
     }
@@ -343,14 +349,12 @@ const PacManMath = () => {
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           >
-            🟡
+            😮
           </motion.div>
-
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Pac-Man Math</h1>
           <p className="text-gray-600 mb-6">
             Navigate Pac-Man through the maze and collect the correct answers!
           </p>
-
           <div className="space-y-4 text-left text-sm text-gray-600 mb-6">
             <div>🎯 Solve: Math problems appear on screen</div>
             <div>🕹️ Use arrow keys or swipe to move</div>
@@ -358,7 +362,6 @@ const PacManMath = () => {
             <div>❌ Avoid wrong answers or lose lives</div>
             <div>⏸️ Press SPACE to pause</div>
           </div>
-
           <motion.button
             onClick={startNewGame}
             className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-4 px-8 rounded-xl"
@@ -367,7 +370,6 @@ const PacManMath = () => {
           >
             Start Game
           </motion.button>
-
           <motion.button
             onClick={() => navigate('/mini-games')}
             className="w-full mt-4 bg-gray-500 text-white font-bold py-3 px-8 rounded-xl"
@@ -384,8 +386,8 @@ const PacManMath = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-black p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Game UI */}
-        <div className="bg-white rounded-2xl p-4 mb-4">
+        {/* Game UI - Always visible at top */}
+        <div className="bg-white rounded-2xl p-4 mb-4 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <div className="text-center">
@@ -409,7 +411,6 @@ const PacManMath = () => {
                 <div className="text-sm text-gray-600">Time</div>
               </div>
             </div>
-
             {gameState.currentProblem && (
               <div className="text-center">
                 <div className="text-xl font-bold text-gray-800">
@@ -422,13 +423,13 @@ const PacManMath = () => {
         </div>
 
         {/* Game Board */}
-        <div 
+        <div
           className="bg-black rounded-2xl p-4 relative touch-none"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {gameState.maze.length > 0 && (
-            <div 
+            <div
               className="grid gap-0 w-full max-w-2xl mx-auto"
               style={{ gridTemplateColumns: 'repeat(15, 1fr)' }}
             >
@@ -459,7 +460,6 @@ const PacManMath = () => {
               ⬆️
             </motion.button>
             <div></div>
-            
             <motion.button
               onTouchStart={() => movePacman('left')}
               className="bg-blue-500 text-white p-4 rounded-xl font-bold text-2xl"
@@ -467,18 +467,18 @@ const PacManMath = () => {
             >
               ⬅️
             </motion.button>
-            
             <motion.button
-              onTouchStart={() => setGameState(prev => ({ 
-                ...prev, 
-                gameStatus: prev.gameStatus === 'playing' ? 'paused' : 'playing' 
-              }))}
+              onTouchStart={() =>
+                setGameState(prev => ({
+                  ...prev,
+                  gameStatus: prev.gameStatus === 'playing' ? 'paused' : 'playing'
+                }))
+              }
               className="bg-yellow-500 text-white p-4 rounded-xl font-bold text-sm"
               whileTap={{ scale: 0.9 }}
             >
               {gameState.gameStatus === 'playing' ? '⏸️' : '▶️'}
             </motion.button>
-            
             <motion.button
               onTouchStart={() => movePacman('right')}
               className="bg-blue-500 text-white p-4 rounded-xl font-bold text-2xl"
@@ -486,7 +486,6 @@ const PacManMath = () => {
             >
               ➡️
             </motion.button>
-            
             <div></div>
             <motion.button
               onTouchStart={() => movePacman('down')}
@@ -502,8 +501,12 @@ const PacManMath = () => {
         {/* Controls Help */}
         <div className="bg-white rounded-2xl p-4 mt-4">
           <div className="text-center text-sm text-gray-600">
-            <div className="hidden md:block">Use arrow keys to move • SPACE to pause • Collect correct answers • Avoid wrong answers!</div>
-            <div className="md:hidden">Swipe or use buttons to move • Collect correct answers • Avoid wrong answers!</div>
+            <div className="hidden md:block">
+              Use arrow keys to move • SPACE to pause • Collect correct answers • Avoid wrong answers!
+            </div>
+            <div className="md:hidden">
+              Swipe or use buttons to move • Collect correct answers • Avoid wrong answers!
+            </div>
           </div>
         </div>
 
@@ -525,9 +528,15 @@ const PacManMath = () => {
                 <div className="text-6xl mb-4">😵</div>
                 <h2 className="text-3xl font-bold text-gray-800 mb-4">Game Over!</h2>
                 <div className="space-y-2 mb-6">
-                  <div>Final Score: <span className="font-bold">{gameState.score}</span></div>
-                  <div>Level Reached: <span className="font-bold">{gameState.level}</span></div>
-                  <div>Dots Eaten: <span className="font-bold">{gameState.dotsEaten}</span></div>
+                  <div>
+                    Final Score: <span className="font-bold">{gameState.score}</span>
+                  </div>
+                  <div>
+                    Level Reached: <span className="font-bold">{gameState.level}</span>
+                  </div>
+                  <div>
+                    Dots Eaten: <span className="font-bold">{gameState.dotsEaten}</span>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <motion.button

@@ -51,34 +51,40 @@ export const UserProvider = ({ children }) => {
 
     setUser(userWithDefaults);
     setIsAuthenticated(true);
+
     // Save with unique user ID to prevent shared progress
     const userKey = `mathHeroUser_${userWithDefaults.id || Date.now()}`;
     localStorage.setItem(userKey, JSON.stringify(userWithDefaults));
     localStorage.setItem('mathHeroCurrentUser', userKey);
+    localStorage.setItem('mathHeroUser', JSON.stringify(userWithDefaults));
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('mathHeroCurrentUser');
-    // Don't remove the user data, just the current session
+    localStorage.removeItem('mathHeroCurrentUser'); // Don't remove the user data, just the current session
   };
 
   const updateUser = (updates) => {
     const updatedUser = { ...user, ...updates };
     setUser(updatedUser);
+
     // Update with user-specific key
     const userKey = localStorage.getItem('mathHeroCurrentUser') || `mathHeroUser_${user.id}`;
     localStorage.setItem(userKey, JSON.stringify(updatedUser));
+    localStorage.setItem('mathHeroUser', JSON.stringify(updatedUser));
   };
 
   const addCoins = (amount) => {
-    const newCoins = user.coins + amount;
+    console.log(`Adding ${amount} coins to user with current balance: ${user.coins || 0}`);
+    const newCoins = (user.coins || 0) + amount;
     updateUser({ coins: newCoins });
+    return newCoins;
   };
 
   const spendCoins = (amount) => {
-    if (user.coins >= amount) {
+    console.log(`Spending ${amount} coins. Current balance: ${user.coins || 0}`);
+    if ((user.coins || 0) >= amount) {
       const newCoins = user.coins - amount;
       updateUser({ coins: newCoins });
       return true;
@@ -87,7 +93,7 @@ export const UserProvider = ({ children }) => {
   };
 
   const addXP = (amount) => {
-    const newXP = user.xp + amount;
+    const newXP = (user.xp || 0) + amount;
     const newLevel = Math.floor(newXP / 100) + 1;
     updateUser({
       xp: newXP,
@@ -96,7 +102,7 @@ export const UserProvider = ({ children }) => {
   };
 
   const updateStats = (newStats) => {
-    const updatedStats = { ...user.stats, ...newStats };
+    const updatedStats = { ...(user.stats || {}), ...newStats };
     updateUser({ stats: updatedStats });
   };
 
@@ -108,8 +114,9 @@ export const UserProvider = ({ children }) => {
   };
 
   const purchaseItem = (item) => {
+    console.log(`Attempting to purchase item: ${item.id} for ${item.price} coins`);
     if (spendCoins(item.price)) {
-      const newOwnedItems = [...user.ownedItems, item.id];
+      const newOwnedItems = [...(user.ownedItems || []), item.id];
       updateUser({ ownedItems: newOwnedItems });
       return true;
     }

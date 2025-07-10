@@ -12,9 +12,7 @@ export const useSound = () => {
 
 export const SoundProvider = ({ children }) => {
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(true);
-  const [audioContext, setAudioContext] = useState(null);
-  const [backgroundMusic, setBackgroundMusic] = useState(null);
+  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(false);
 
   useEffect(() => {
     const savedSound = localStorage.getItem('mathHeroSound');
@@ -26,69 +24,7 @@ export const SoundProvider = ({ children }) => {
     if (savedMusic !== null) {
       setBackgroundMusicEnabled(JSON.parse(savedMusic));
     }
-
-    // Initialize background music
-    initBackgroundMusic();
   }, []);
-
-  const initBackgroundMusic = () => {
-    // Create a simple background music using Web Audio API
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      setAudioContext(audioCtx);
-      
-      // Create a simple melody for background music
-      if (backgroundMusicEnabled) {
-        playBackgroundMusic(audioCtx);
-      }
-    } catch (error) {
-      console.warn('Could not initialize background music:', error);
-    }
-  };
-
-  const playBackgroundMusic = (ctx) => {
-    if (!backgroundMusicEnabled || !ctx) return;
-
-    const melody = [
-      { freq: 523.25, duration: 0.5 }, // C5
-      { freq: 587.33, duration: 0.5 }, // D5
-      { freq: 659.25, duration: 0.5 }, // E5
-      { freq: 698.46, duration: 0.5 }, // F5
-      { freq: 783.99, duration: 1.0 }, // G5
-      { freq: 659.25, duration: 0.5 }, // E5
-      { freq: 523.25, duration: 1.0 }, // C5
-    ];
-
-    let currentTime = ctx.currentTime;
-    
-    melody.forEach((note, index) => {
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      oscillator.frequency.setValueAtTime(note.freq, currentTime);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.02, currentTime + 0.1);
-      gainNode.gain.linearRampToValueAtTime(0.01, currentTime + note.duration - 0.1);
-      gainNode.gain.linearRampToValueAtTime(0, currentTime + note.duration);
-      
-      oscillator.start(currentTime);
-      oscillator.stop(currentTime + note.duration);
-      
-      currentTime += note.duration;
-    });
-
-    // Repeat the melody
-    setTimeout(() => {
-      if (backgroundMusicEnabled) {
-        playBackgroundMusic(ctx);
-      }
-    }, 4000);
-  };
 
   const toggleSound = () => {
     const newState = !soundEnabled;
@@ -100,10 +36,6 @@ export const SoundProvider = ({ children }) => {
     const newState = !backgroundMusicEnabled;
     setBackgroundMusicEnabled(newState);
     localStorage.setItem('mathHeroBackgroundMusic', JSON.stringify(newState));
-    
-    if (newState && audioContext) {
-      playBackgroundMusic(audioContext);
-    }
   };
 
   const playSound = (type) => {
@@ -133,7 +65,7 @@ export const SoundProvider = ({ children }) => {
             osc.stop(audioCtx.currentTime + i * 0.1 + 0.3);
           });
           break;
-
+        
         case 'incorrect':
           // Descending sad melody
           [440, 392, 349.23].forEach((freq, i) => {
@@ -149,7 +81,7 @@ export const SoundProvider = ({ children }) => {
             osc.stop(audioCtx.currentTime + i * 0.15 + 0.4);
           });
           break;
-
+        
         case 'coin':
           // Sparkly coin sound
           [800, 1000, 1200].forEach((freq, i) => {
@@ -165,7 +97,7 @@ export const SoundProvider = ({ children }) => {
             osc.stop(audioCtx.currentTime + i * 0.05 + 0.2);
           });
           break;
-
+        
         case 'click':
           oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
           oscillator.type = 'square';
@@ -174,7 +106,7 @@ export const SoundProvider = ({ children }) => {
           oscillator.start(audioCtx.currentTime);
           oscillator.stop(audioCtx.currentTime + 0.1);
           break;
-
+        
         case 'achievement':
           // Triumphant fanfare
           [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
@@ -190,7 +122,7 @@ export const SoundProvider = ({ children }) => {
             osc.stop(audioCtx.currentTime + i * 0.1 + 0.5);
           });
           break;
-
+        
         case 'whoosh':
           // Swoosh sound for animations
           oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
@@ -201,7 +133,7 @@ export const SoundProvider = ({ children }) => {
           oscillator.start(audioCtx.currentTime);
           oscillator.stop(audioCtx.currentTime + 0.3);
           break;
-
+        
         case 'magic':
           // Magical sparkle sound
           [440, 554.37, 659.25, 880].forEach((freq, i) => {
@@ -217,7 +149,7 @@ export const SoundProvider = ({ children }) => {
             osc.stop(audioCtx.currentTime + i * 0.08 + 0.4);
           });
           break;
-
+        
         default:
           oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
           oscillator.type = 'sine';

@@ -6,13 +6,23 @@ import GameCard from '../components/GameCard';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiGamepad2, FiZap, FiTarget, FiGrid, FiShuffle, FiCpu, FiPuzzle, FiEdit3, FiPieChart } = FiIcons;
+const { FiGamepad2, FiZap, FiTarget, FiGrid, FiShuffle, FiCpu, FiPuzzle, FiEdit3, FiPieChart, FiTruck } = FiIcons;
 
 const MiniGames = () => {
   const { user } = useUser();
   const { t } = useLanguage();
 
   const games = [
+    {
+      title: 'Math Racer',
+      description: 'Drive your car to collect correct answers! Avoid the wrong ones in this exciting racing game.',
+      icon: FiTruck,
+      path: '/games/math-racer',
+      premium: false,
+      difficulty: 'medium',
+      estimatedTime: '5-10 min',
+      color: 'red'
+    },
     {
       title: 'Math Puzzles',
       description: 'Solve challenging math problems against the clock! Perfect for building speed and accuracy.',
@@ -65,7 +75,7 @@ const MiniGames = () => {
     },
     {
       title: t('slotMachine'),
-      description: 'Solve math problems to spin the slot machine and win coins!',
+      description: 'Solve math problems to spin the slot machine and win coins and prizes!',
       icon: FiTarget,
       path: '/games/slot-machine',
       premium: false,
@@ -179,7 +189,7 @@ const MiniGames = () => {
             ALL FREE!
           </motion.span>
         </motion.h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {games.map((game, index) => (
             <motion.div

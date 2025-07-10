@@ -14,48 +14,59 @@ const MathPuzzles = () => {
 
   const [gameState, setGameState] = useState({
     currentPuzzle: null,
-    userAnswer: '',
-    feedback: '',
+    puzzlePieces: [],
+    placedPieces: {},
+    draggedPiece: null,
+    currentFeedback: '',
     isCorrect: null,
     score: 0,
     level: 1,
     streak: 0,
-    timeLeft: 30,
-    gameStatus: 'menu', // menu, playing, paused, complete
+    gameStatus: 'menu', // menu, playing, complete
     difficulty: 'medium',
     operation: 'mixed',
     puzzlesCompleted: 0,
-    totalPuzzles: 10
+    totalPuzzles: 5
   });
-
-  // Timer effect
-  useEffect(() => {
-    if (gameState.gameStatus === 'playing' && gameState.timeLeft > 0) {
-      const timer = setTimeout(() => {
-        setGameState(prev => ({ ...prev, timeLeft: prev.timeLeft - 1 }));
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (gameState.timeLeft === 0 && gameState.gameStatus === 'playing') {
-      handleTimeUp();
-    }
-  }, [gameState.timeLeft, gameState.gameStatus]);
 
   const generateNewPuzzle = () => {
     const operations = gameState.operation === 'mixed' 
-      ? ['addition', 'subtraction', 'multiplication', 'division']
+      ? ['addition', 'subtraction', 'multiplication', 'division'] 
       : [gameState.operation];
     
     const selectedOperation = operations[Math.floor(Math.random() * operations.length)];
     const puzzle = generateMathProblem(selectedOperation, gameState.difficulty, user?.age || 8);
-    
+
+    // Create puzzle pieces
+    const pieces = [
+      { id: 'num1', value: puzzle.num1, type: 'number', placed: false },
+      { id: 'operator', value: getOperatorSymbol(selectedOperation), type: 'operator', placed: false },
+      { id: 'num2', value: puzzle.num2, type: 'number', placed: false },
+      { id: 'equals', value: '=', type: 'operator', placed: false },
+      { id: 'answer', value: puzzle.answer, type: 'answer', placed: false }
+    ];
+
+    // Shuffle pieces
+    const shuffledPieces = [...pieces].sort(() => Math.random() - 0.5);
+
     setGameState(prev => ({
       ...prev,
       currentPuzzle: puzzle,
-      userAnswer: '',
-      feedback: '',
-      isCorrect: null,
-      timeLeft: 30 + (gameState.difficulty === 'easy' ? 10 : gameState.difficulty === 'hard' ? -10 : 0)
+      puzzlePieces: shuffledPieces,
+      placedPieces: {},
+      currentFeedback: '',
+      isCorrect: null
     }));
+  };
+
+  const getOperatorSymbol = (operation) => {
+    switch (operation) {
+      case 'addition': return '+';
+      case 'subtraction': return '-';
+      case 'multiplication': return '×';
+      case 'division': return '÷';
+      default: return '+';
+    }
   };
 
   const startNewGame = (difficulty = 'medium', operation = 'mixed') => {
@@ -68,81 +79,101 @@ const MathPuzzles = () => {
       level: 1,
       streak: 0,
       puzzlesCompleted: 0,
-      totalPuzzles: 10
+      totalPuzzles: 5
     }));
-    
     startGame('math-puzzles', { difficulty, operation });
     generateNewPuzzle();
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!gameState.userAnswer.trim()) return;
+  const handleDragStart = (piece) => {
+    if (piece.placed) return;
+    setGameState(prev => ({ ...prev, draggedPiece: piece }));
+  };
 
-    const userAnswerNum = parseInt(gameState.userAnswer);
-    const isCorrect = userAnswerNum === gameState.currentPuzzle.answer;
+  const handleDrop = (slotId) => {
+    if (!gameState.draggedPiece) return;
+
+    const newPlacedPieces = { ...gameState.placedPieces };
+    const newPuzzlePieces = gameState.puzzlePieces.map(piece => {
+      if (piece.id === gameState.draggedPiece.id) {
+        return { ...piece, placed: true };
+      }
+      return piece;
+    });
+
+    newPlacedPieces[slotId] = gameState.draggedPiece;
+
+    setGameState(prev => ({
+      ...prev,
+      placedPieces: newPlacedPieces,
+      puzzlePieces: newPuzzlePieces,
+      draggedPiece: null
+    }));
+
+    // Check if puzzle is complete
+    if (Object.keys(newPlacedPieces).length === 5) {
+      checkPuzzleComplete(newPlacedPieces);
+    }
+  };
+
+  const checkPuzzleComplete = (placedPieces) => {
+    const correctOrder = ['num1', 'operator', 'num2', 'equals', 'answer'];
+    const isCorrect = correctOrder.every((expectedId, index) => {
+      const slotId = `slot-${index}`;
+      const placedPiece = placedPieces[slotId];
+      return placedPiece && placedPiece.id === expectedId;
+    });
 
     if (isCorrect) {
       playSound('correct');
       const newStreak = gameState.streak + 1;
-      const points = 100 + (newStreak * 10) + (gameState.timeLeft * 2);
-      
+      const points = 100 + (newStreak * 10);
       setGameState(prev => ({
         ...prev,
         isCorrect: true,
-        feedback: 'Correct! Well done! 🎉',
+        currentFeedback: 'Perfect! Puzzle solved! 🎉',
         score: prev.score + points,
         streak: newStreak,
         puzzlesCompleted: prev.puzzlesCompleted + 1
       }));
 
-      // Reward coins and XP
-      addCoins(10 + newStreak);
-      addXP(20);
+      addCoins(15 + newStreak);
+      addXP(25);
 
-      // Confetti effect
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       });
 
+      // Check if game is complete
+      setTimeout(() => {
+        if (gameState.puzzlesCompleted + 1 >= gameState.totalPuzzles) {
+          completeGame();
+        } else {
+          generateNewPuzzle();
+        }
+      }, 2000);
     } else {
       playSound('incorrect');
       setGameState(prev => ({
         ...prev,
         isCorrect: false,
-        feedback: `Incorrect. The answer was ${gameState.currentPuzzle.answer}`,
+        currentFeedback: 'Not quite right! Try rearranging the pieces.',
         streak: 0
       }));
+
+      // Reset puzzle after delay
+      setTimeout(() => {
+        setGameState(prev => ({
+          ...prev,
+          placedPieces: {},
+          puzzlePieces: prev.puzzlePieces.map(piece => ({ ...piece, placed: false })),
+          currentFeedback: '',
+          isCorrect: null
+        }));
+      }, 2000);
     }
-
-    // Check if game is complete
-    setTimeout(() => {
-      if (gameState.puzzlesCompleted + 1 >= gameState.totalPuzzles) {
-        completeGame();
-      } else {
-        generateNewPuzzle();
-      }
-    }, 2000);
-  };
-
-  const handleTimeUp = () => {
-    playSound('incorrect');
-    setGameState(prev => ({
-      ...prev,
-      isCorrect: false,
-      feedback: `Time's up! The answer was ${gameState.currentPuzzle.answer}`,
-      streak: 0
-    }));
-
-    setTimeout(() => {
-      if (gameState.puzzlesCompleted >= gameState.totalPuzzles) {
-        completeGame();
-      } else {
-        generateNewPuzzle();
-      }
-    }, 2000);
   };
 
   const completeGame = () => {
@@ -152,6 +183,15 @@ const MathPuzzles = () => {
       difficulty: gameState.difficulty,
       operation: gameState.operation
     });
+  };
+
+  const getPieceColor = (type) => {
+    switch (type) {
+      case 'number': return 'bg-blue-400 text-white';
+      case 'operator': return 'bg-red-400 text-white';
+      case 'answer': return 'bg-green-400 text-white';
+      default: return 'bg-gray-400 text-white';
+    }
   };
 
   // Menu Screen
@@ -167,15 +207,14 @@ const MathPuzzles = () => {
           <div className="text-center">
             <motion.div
               className="text-8xl mb-6 mx-auto"
-              animate={{ rotateY: [0, 180, 360] }}
+              animate={{ rotateX: [0, 360] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
               🧩
             </motion.div>
-            
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">Math Puzzles</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">Math Puzzle Challenge</h1>
             <p className="text-gray-600 mb-8">
-              Solve challenging math problems against the clock! Test your skills and improve your speed.
+              Drag and drop puzzle pieces to create correct math equations!
             </p>
 
             {/* Difficulty Selection */}
@@ -270,10 +309,9 @@ const MathPuzzles = () => {
             >
               🏆
             </motion.div>
-            
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">Puzzle Complete!</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">Puzzle Master!</h1>
             <p className="text-gray-600 mb-8">
-              Great job! You've completed all the math puzzles!
+              Congratulations! You've completed all the math puzzles!
             </p>
 
             <div className="bg-blue-50 rounded-2xl p-6 mb-8">
@@ -306,7 +344,6 @@ const MathPuzzles = () => {
               >
                 Play Again
               </motion.button>
-              
               <motion.button
                 className="w-full py-3 bg-gray-500 text-white font-bold rounded-xl"
                 whileHover={{ scale: 1.05 }}
@@ -342,31 +379,15 @@ const MathPuzzles = () => {
                 <div className="text-2xl font-bold text-orange-600">{gameState.streak}</div>
                 <div className="text-sm text-gray-600">Streak</div>
               </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${gameState.timeLeft <= 5 ? 'text-red-500' : 'text-purple-600'}`}>{gameState.timeLeft}s</div>
-                <div className="text-sm text-gray-600">Time</div>
-              </div>
             </div>
-            
-            <div className="flex space-x-2">
-              <motion.button
-                onClick={() => setGameState(prev => ({ ...prev, gameStatus: 'paused' }))}
-                className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                ⏸️ Pause
-              </motion.button>
-              
-              <motion.button
-                onClick={() => navigate('/mini-games')}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Exit
-              </motion.button>
-            </div>
+            <motion.button
+              onClick={() => navigate('/mini-games')}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Exit
+            </motion.button>
           </div>
         </div>
 
@@ -393,112 +414,79 @@ const MathPuzzles = () => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          {gameState.currentPuzzle && (
-            <AnimatePresence mode="wait">
-              {gameState.isCorrect === null ? (
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+            Drag the pieces to complete the equation! 🧩
+          </h2>
+
+          {/* Equation Slots */}
+          <div className="flex justify-center items-center space-x-4 mb-8">
+            {Array.from({ length: 5 }, (_, index) => (
+              <motion.div
+                key={index}
+                className="w-20 h-20 border-4 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold bg-gray-50"
+                whileHover={{ scale: 1.05 }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(`slot-${index}`)}
+              >
+                {gameState.placedPieces[`slot-${index}`] ? (
+                  <span className={`w-full h-full rounded-xl flex items-center justify-center ${getPieceColor(gameState.placedPieces[`slot-${index}`].type)}`}>
+                    {gameState.placedPieces[`slot-${index}`].value}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">?</span>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Puzzle Pieces */}
+          <div className="flex justify-center">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+              {gameState.puzzlePieces.filter(piece => !piece.placed).map((piece, index) => (
                 <motion.div
-                  key="puzzle"
+                  key={piece.id}
+                  className={`w-16 h-16 rounded-xl flex items-center justify-center text-xl font-bold cursor-pointer select-none ${getPieceColor(piece.type)} shadow-lg`}
+                  draggable={!piece.placed}
+                  onDragStart={() => handleDragStart(piece)}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="text-center"
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <div className="mb-8">
-                    <div className="text-6xl font-bold text-gray-800 mb-4 font-mono">
-                      {gameState.currentPuzzle.question} = ?
-                    </div>
-                    
-                    {/* Visual aids for younger kids */}
-                    {user?.age <= 8 && gameState.currentPuzzle.operation === 'addition' && 
-                     gameState.currentPuzzle.num1 <= 10 && gameState.currentPuzzle.num2 <= 10 && (
-                      <div className="flex justify-center items-center space-x-4 mb-6">
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {Array.from({ length: gameState.currentPuzzle.num1 }, (_, i) => (
-                            <motion.span
-                              key={i}
-                              className="text-2xl"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: i * 0.1 }}
-                            >
-                              🟦
-                            </motion.span>
-                          ))}
-                        </div>
-                        <span className="text-3xl font-bold text-gray-600">+</span>
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {Array.from({ length: gameState.currentPuzzle.num2 }, (_, i) => (
-                            <motion.span
-                              key={i}
-                              className="text-2xl"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: (gameState.currentPuzzle.num1 + i) * 0.1 }}
-                            >
-                              🟨
-                            </motion.span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  {piece.value}
+                </motion.div>
+              ))}
+            </div>
+          </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <input
-                      type="number"
-                      value={gameState.userAnswer}
-                      onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-                      className="w-full text-center text-3xl font-bold py-4 px-6 rounded-xl border-2 border-blue-300 focus:border-blue-500 focus:outline-none transition-colors"
-                      placeholder="Your answer"
-                      autoFocus
-                    />
-                    
-                    <motion.button
-                      type="submit"
-                      className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      disabled={!gameState.userAnswer.trim()}
-                    >
-                      Submit Answer
-                    </motion.button>
-                  </form>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="feedback"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="text-center"
-                >
-                  <motion.div
-                    className={`text-4xl font-bold mb-4 ${
-                      gameState.isCorrect ? 'text-green-600' : 'text-red-600'
-                    }`}
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      rotate: gameState.isCorrect ? [0, 10, -10, 0] : [0, -5, 5, 0]
-                    }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {gameState.isCorrect ? '🎉' : '😅'}
-                  </motion.div>
-                  
-                  <div className="text-2xl font-bold mb-4 text-gray-800">
-                    {gameState.feedback}
-                  </div>
-                  
-                  {gameState.isCorrect && (
-                    <div className="text-lg text-green-600 mb-4">
-                      +{100 + (gameState.streak * 10)} points • +{10 + gameState.streak} coins
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
+          {/* Feedback */}
+          <AnimatePresence>
+            {gameState.currentFeedback && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`mt-6 text-center p-4 rounded-xl ${
+                  gameState.isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}
+              >
+                <div className="text-2xl font-bold mb-2">
+                  {gameState.isCorrect ? '🎉' : '🤔'}
+                </div>
+                <div className="text-lg font-bold">{gameState.currentFeedback}</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
+
+        {/* Instructions */}
+        <div className="bg-white rounded-2xl p-4 shadow-lg">
+          <div className="text-center text-sm text-gray-600">
+            <div className="hidden md:block">💡 Drag pieces from the bottom to the equation slots above. Arrange them in the correct order!</div>
+            <div className="md:hidden">💡 Drag pieces to complete the math equation!</div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -39,7 +39,6 @@ export const GameProvider = ({ children }) => {
       timestamp: new Date().toISOString(),
       ...stats
     };
-    
     setGameHistory(prev => [...prev, gameRecord]);
     setCurrentGame(null);
     setGameState({});
@@ -66,28 +65,24 @@ export const GameProvider = ({ children }) => {
         answer = num1 + num2;
         question = `${num1} + ${num2}`;
         break;
-
       case 'subtraction':
         num1 = Math.floor(Math.random() * max) + min;
         num2 = Math.floor(Math.random() * num1) + 1;
         answer = num1 - num2;
         question = `${num1} - ${num2}`;
         break;
-
       case 'multiplication':
         num1 = Math.floor(Math.random() * (difficulty === 'easy' ? 5 : 10)) + 1;
         num2 = Math.floor(Math.random() * (difficulty === 'easy' ? 5 : 10)) + 1;
         answer = num1 * num2;
         question = `${num1} × ${num2}`;
         break;
-
       case 'division':
         num2 = Math.floor(Math.random() * (difficulty === 'easy' ? 5 : 10)) + 1;
         answer = Math.floor(Math.random() * (difficulty === 'easy' ? 10 : 20)) + 1;
         num1 = num2 * answer;
         question = `${num1} ÷ ${num2}`;
         break;
-
       case 'percentages':
         if (enablePercentages) {
           // Simple percentage calculations
@@ -98,7 +93,6 @@ export const GameProvider = ({ children }) => {
           break;
         }
         // Fall through to default if percentages not enabled
-
       default:
         num1 = Math.floor(Math.random() * max) + min;
         num2 = Math.floor(Math.random() * max) + min;
@@ -112,14 +106,14 @@ export const GameProvider = ({ children }) => {
   const generateMultipleChoice = (correctAnswer, count = 4) => {
     const choices = [correctAnswer];
     const range = Math.max(10, Math.floor(correctAnswer * 0.5));
-    
+
     while (choices.length < count) {
       const wrongAnswer = correctAnswer + Math.floor(Math.random() * range * 2) - range;
       if (wrongAnswer !== correctAnswer && wrongAnswer > 0 && !choices.includes(wrongAnswer)) {
         choices.push(wrongAnswer);
       }
     }
-    
+
     return choices.sort(() => Math.random() - 0.5);
   };
 

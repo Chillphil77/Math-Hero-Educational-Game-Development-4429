@@ -46,10 +46,11 @@ const MathStories = () => {
       description: 'Solve the mystery of the missing numbers as a math detective. Use subtraction to find important clues!',
       icon: '🕵️',
       color: 'from-purple-400 to-purple-600',
-      premium: false, // Changed to free
+      premium: false,
       topics: ['subtraction', 'logic'],
       age: '7-10',
-      estimatedTime: '15 min'
+      estimatedTime: '15 min',
+      path: '/stories/math-detective'
     },
     {
       id: 'space-mission',
@@ -57,10 +58,11 @@ const MathStories = () => {
       description: 'Navigate your spaceship through the galaxy by solving multiplication problems to calculate rocket thrust.',
       icon: '🚀',
       color: 'from-indigo-400 to-indigo-600',
-      premium: false, // Changed to free
+      premium: false,
       topics: ['multiplication', 'estimation'],
       age: '8-12',
-      estimatedTime: '12 min'
+      estimatedTime: '12 min',
+      path: '/stories/space-mission'
     },
     {
       id: 'bakery-fractions',
@@ -68,20 +70,19 @@ const MathStories = () => {
       description: 'Help the baker make delicious treats by measuring ingredients using fractions. Perfect for learning parts of a whole!',
       icon: '🧁',
       color: 'from-pink-400 to-pink-600',
-      premium: false, // Changed to free
+      premium: false,
       topics: ['fractions', 'measurement'],
       age: '9-12',
-      estimatedTime: '15 min'
+      estimatedTime: '15 min',
+      path: '/stories/bakery-fractions'
     }
   ];
 
   const handleStoryClick = (story) => {
     playSound('click');
-    
     if (story.path) {
       navigate(story.path);
     } else {
-      // For stories without implemented paths
       alert(`The story "${story.title}" is coming soon! We're still working on it.`);
     }
   };
@@ -165,7 +166,7 @@ const MathStories = () => {
             ALL FREE!
           </motion.span>
         </motion.h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {stories.map((story, index) => (
             <motion.div
@@ -185,7 +186,6 @@ const MathStories = () => {
                     {story.icon}
                   </div>
                 </div>
-                
                 {/* Free Badge */}
                 <div className="absolute top-4 right-4">
                   <motion.div
